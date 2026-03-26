@@ -1,5 +1,48 @@
 const Bin = require('../models/Bin.js');
 
+const createBin = async (req, res) => {
+  try {
+    const { id, wardId, lat, lng, status, category, lastUpdated } = req.body;
+    const allowedStatuses = ['Empty', 'Filling', 'Full'];
+
+    if (
+      !id ||
+      wardId === undefined ||
+      lat === undefined ||
+      lng === undefined ||
+      !status ||
+      !category
+    ) {
+      return res.status(400).json({ error: 'Missing required bin fields' });
+    }
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Invalid status value' });
+    }
+
+    const existingBin = await Bin.findOne({ id });
+    if (existingBin) {
+      return res.status(409).json({ error: 'Bin with this id already exists' });
+    }
+
+    const bin = new Bin({
+      id,
+      wardId: Number(wardId),
+      lat: Number(lat),
+      lng: Number(lng),
+      status,
+      category,
+      lastUpdated,
+    });
+
+    await bin.save();
+
+    res.status(201).json({ success: true, bin });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 const getBins = async (req, res) => {
   try {
     const filter = {};
@@ -36,4 +79,4 @@ const updateBin = async (req, res) => {
   }
 };
 
-module.exports = { getBins, updateBin };
+module.exports = { createBin, getBins, updateBin };

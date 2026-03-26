@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { getBins, updateBin } = require('../controllers/binController.js');
+const { createBin, getBins, updateBin } = require('../controllers/binController.js');
+
+// POST /bins
+router.post('/', createBin);
 
 // GET /bins
 // GET /bins?ward=
