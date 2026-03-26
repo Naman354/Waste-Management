@@ -1,5 +1,5 @@
 const Bin = require('../models/Bin');
-const { optimizeRoute } = require('../services/routeService');
+const { optimizeRoute } = require('../services/routeService.js');
 
 const getDriverRoute = async (req, res) => {
   try {

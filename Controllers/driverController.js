@@ -1,4 +1,4 @@
-const { setDriverLocation, getDrivers: getDriversFromStore } = require('../memory/driverStore');
+const { setDriverLocation, getDrivers: getDriversFromStore } = require('../memory/driverStore.js');
 
 const updateDriverLocation = (req, res) => {
   try {

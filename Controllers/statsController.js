@@ -1,5 +1,5 @@
 const Bin = require('../models/Bin');
-const { getDrivers } = require('../memory/driverStore');
+const { getDrivers } = require('../memory/driverStore.js');
 
 const getStats = async (req, res) => {
   try {

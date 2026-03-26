@@ -1,4 +1,4 @@
-const { classifyImage: callPython } = require('../services/pythonService');
+const { classifyImage: callPython } = require('../services/pythonService.js');
 
 const classifyImage = async (req, res) => {
   try {

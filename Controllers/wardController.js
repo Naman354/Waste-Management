@@ -1,4 +1,4 @@
-const Ward = require('../models/Ward');
+const Ward = require('../models/Ward.js');
 
 const getWards = async (req, res) => {
   try {
