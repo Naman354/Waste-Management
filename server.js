@@ -24,7 +24,7 @@ app.use('/stats',     require('./routes/statsRoutes.js'));
 
 // Health check
 app.get('/', (req, res) => {
-  res.json({ status: 'Smart Waste Management API is running' });
+  res.send({ status: 'Smart Waste Management API is running' });
 });
 
 const PORT = process.env.PORT || 5000;
