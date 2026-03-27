@@ -1,20 +1,42 @@
+const fs = require('fs');
 const axios = require('axios');
 const FormData = require('form-data');
 
 const classifyImage = async (imageFile) => {
   try {
+    const baseUrl = process.env.PYTHON_URL?.replace(/\/+$/, '');
+
+    if (!baseUrl) {
+      throw new Error('PYTHON_URL is not configured');
+    }
+
     const form = new FormData();
-    form.append('image', imageFile.buffer, imageFile.originalname);
+    form.append('file', fs.createReadStream(imageFile.path), imageFile.originalname);
 
     const response = await axios.post(
-      `${process.env.PYTHON_API_URL}/classify`,
+      `${baseUrl}/predict`,
       form,
       { headers: form.getHeaders() }
     );
 
-    return { category: response.data.category };
+    return {
+      status: response.data.status,
+      detected: response.data.detected,
+      message: response.data.message,
+      tip: response.data.tip,
+    };
   } catch (err) {
-    return { category: 'unknown' };
+    console.error('ML ERROR FULL:', {
+      status: err.response?.status,
+      data: err.response?.data,
+      message: err.message,
+    });
+    return {
+      status: 'unknown',
+      detected: false,
+      message: 'Failed to classify the uploaded image.',
+      tip: 'Please try again after the ML service becomes available.',
+    };
   }
 };
 
