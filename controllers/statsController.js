@@ -1,5 +1,53 @@
 const Bin = require('../models/Bin');
 const { getDrivers } = require('../memory/driverStore.js');
+const KOLKATA_TIMEZONE = 'Asia/Kolkata';
+
+const getDatePartsInKolkata = (date) => {
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: KOLKATA_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    weekday: 'short',
+  });
+
+  return formatter.formatToParts(date).reduce((parts, part) => {
+    if (part.type !== 'literal') {
+      parts[part.type] = part.value;
+    }
+    return parts;
+  }, {});
+};
+
+const getKolkataDayKey = (date) => {
+  const { year, month, day } = getDatePartsInKolkata(date);
+  return `${year}-${month}-${day}`;
+};
+
+const getKolkataHourKey = (date) => {
+  const { year, month, day, hour } = getDatePartsInKolkata(date);
+  return `${year}-${month}-${day} ${hour}`;
+};
+
+const getKolkataHourLabel = (date) =>
+  new Intl.DateTimeFormat('en-IN', {
+    timeZone: KOLKATA_TIMEZONE,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(date);
+
+const getKolkataDayLabel = (date) => getDatePartsInKolkata(date).weekday;
+
+const getKolkataDateLabel = (date) =>
+  new Intl.DateTimeFormat('en-IN', {
+    timeZone: KOLKATA_TIMEZONE,
+    day: 'numeric',
+    month: 'short',
+  }).format(date);
 
 // GET /stats
 const getStats = async (req, res) => {
@@ -24,23 +72,18 @@ const getTrends = async (req, res) => {
   try {
     const range = req.query.range || '24h';
     const now = new Date();
-    let startDate, groupFormat, labels, labelCount;
+    let startDate;
+    let groupFormat;
 
     if (range === '24h') {
-      // Last 24 hours, grouped by hour
       startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      groupFormat = '%H';
-      labelCount = 24;
+      groupFormat = '%Y-%m-%d %H';
     } else if (range === '7d') {
-      // Last 7 days, grouped by day
-      startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      startDate = new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000);
       groupFormat = '%Y-%m-%d';
-      labelCount = 7;
     } else if (range === '30d') {
-      // Last 30 days, grouped by day
-      startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      startDate = new Date(now.getTime() - 29 * 24 * 60 * 60 * 1000);
       groupFormat = '%Y-%m-%d';
-      labelCount = 30;
     } else {
       return res.status(400).json({ error: 'Invalid range. Use 24h, 7d, or 30d.' });
     }
@@ -57,7 +100,7 @@ const getTrends = async (req, res) => {
             $dateToString: {
               format: groupFormat,
               date: '$lastUpdated',
-              timezone: 'Asia/Kolkata',
+              timezone: KOLKATA_TIMEZONE,
             },
           },
           count: { $sum: 1 },
@@ -75,49 +118,34 @@ const getTrends = async (req, res) => {
     });
 
     if (range === '24h') {
-      labels = [];
+      const labels = [];
       const data = [];
       for (let i = 0; i < 24; i++) {
         const d = new Date(startDate.getTime() + i * 60 * 60 * 1000);
-        const hour = d.toLocaleTimeString('en-IN', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false,
-          timeZone: 'Asia/Kolkata',
-        });
-        const key = String(d.getUTCHours() + 5).padStart(2, '0'); // approximate IST offset
-        labels.push(hour);
-        data.push(resultMap[String(i).padStart(2, '0')] || 0);
+        labels.push(getKolkataHourLabel(d));
+        data.push(resultMap[getKolkataHourKey(d)] || 0);
       }
       return res.json({ labels, data });
     }
 
     if (range === '7d') {
-      labels = [];
+      const labels = [];
       const data = [];
-      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       for (let i = 6; i >= 0; i--) {
         const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-        const key = d.toISOString().slice(0, 10);
-        labels.push(dayNames[d.getDay()]);
-        data.push(resultMap[key] || 0);
+        labels.push(getKolkataDayLabel(d));
+        data.push(resultMap[getKolkataDayKey(d)] || 0);
       }
       return res.json({ labels, data });
     }
 
     if (range === '30d') {
-      labels = [];
+      const labels = [];
       const data = [];
       for (let i = 29; i >= 0; i--) {
         const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-        const key = d.toISOString().slice(0, 10);
-        const label = d.toLocaleDateString('en-IN', {
-          day: 'numeric',
-          month: 'short',
-          timeZone: 'Asia/Kolkata',
-        });
-        labels.push(label);
-        data.push(resultMap[key] || 0);
+        labels.push(getKolkataDateLabel(d));
+        data.push(resultMap[getKolkataDayKey(d)] || 0);
       }
       return res.json({ labels, data });
     }
