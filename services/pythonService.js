@@ -11,26 +11,32 @@ const classifyImage = async (imageFile) => {
     }
 
     const form = new FormData();
-    form.append('file', fs.createReadStream(imageFile.path), imageFile.originalname);
+
+    // Handle both diskStorage and memoryStorage
+    if (imageFile.path) {
+      form.append('file', fs.createReadStream(imageFile.path), imageFile.originalname);
+    } else {
+      form.append('file', imageFile.buffer, imageFile.originalname);
+    }
 
     const response = await axios.post(
       `${baseUrl}/predict`,
       form,
-      { headers: form.getHeaders() }
+      {
+        headers: form.getHeaders(),
+        timeout: 5000
+      }
     );
 
-    return {
-      status: response.data.status,
-      detected: response.data.detected,
-      message: response.data.message,
-      tip: response.data.tip,
-    };
+    return response.data;
+
   } catch (err) {
     console.error('ML ERROR FULL:', {
       status: err.response?.status,
       data: err.response?.data,
       message: err.message,
     });
+
     return {
       status: 'unknown',
       detected: false,
