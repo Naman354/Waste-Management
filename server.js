@@ -8,10 +8,34 @@ dotenv.config();
 
 const app = express();
 
+const loadOptionalDependency = (name) => {
+  try {
+    return require(name);
+  } catch (_err) {
+    console.warn(`${name} is not installed. Skipping ${name} middleware.`);
+    return null;
+  }
+};
+
+const helmet = loadOptionalDependency('helmet');
+const morgan = loadOptionalDependency('morgan');
+
 // Connect to MongoDB
 connectDB();
 
 // Middleware
+app.disable('x-powered-by');
+
+if (helmet) {
+  app.use(helmet({
+    crossOriginResourcePolicy: false,
+  }));
+}
+
+if (morgan) {
+  app.use(morgan('dev'));
+}
+
 app.use(cors({
   origin: ['http://localhost:8080', 'https://wastemanagementmc.netlify.app'],
   credentials: true
