@@ -1,5 +1,5 @@
 const Bin = require('../models/Bin.js');
-
+//comment by SHivansh
 const createBin = async (req, res) => {
   try {
     const { id, wardId, lat, lng, status, category, lastUpdated } = req.body;
