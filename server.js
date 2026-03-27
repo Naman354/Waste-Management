@@ -24,6 +24,7 @@ app.use('/classify',  require('./routes/classifyRoutes.js'));
 app.use('/route',     require('./routes/routeRoutes.js'));
 app.use('/driver',    require('./routes/driverRoutes.js'));
 app.use('/drivers',   require('./routes/driverRoutes.js'));
+app.use('/upload',    require('./routes/uploadRoutes.js'));
 app.use('/wards',     require('./routes/wardRoutes.js'));
 app.use('/stats',     require('./routes/statsRoutes.js'));
 
