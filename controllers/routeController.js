@@ -4,7 +4,6 @@ const { optimizeRoute } = require('../services/routeService.js');
 const getDriverRoute = async (req, res) => {
   try {
     const { driverId, ward, lat, lng } = req.query;
-
     const bins = await Bin.find({ wardId: Number(ward), status: 'Full' });
 
     if (!bins.length) return res.json([]);
